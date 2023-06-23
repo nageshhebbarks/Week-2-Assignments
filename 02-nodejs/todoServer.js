@@ -41,9 +41,63 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
+const port = 3000;
+let nextTodoId = 1
+
+let todoList = []
 
 const app = express();
-
 app.use(bodyParser.json());
+
+app.get("/todos", (req, res) => {
+  res.json(todoList)
+})
+
+app.get('/todos/:todoId', function(req, res) {
+  let targetTodoList = todoList.filter((elem) => elem.id == req.params.todoId)
+
+  if(targetTodoList.length == 0) {
+    res.sendStatus(404);
+    return
+  }
+
+  res.json(targetTodoList.pop())
+});
+
+app.post("/todos", function(req, res) {
+  let inputTodo = req.body // validate the input.
+  let todo = { id : nextTodoId++, title : inputTodo.title, completed : inputTodo.completed, description : inputTodo.description }
+  todoList.push(todo)
+  res.status(201).json(todo)
+});
+
+app.put('/todos/:todoId', function(req, res) {
+  let inputTodo = req.body // validate the input.
+  let targetTodoList = todoList.filter((elem) => elem.id == req.params.todoId)
+  if(targetTodoList.length == 0) {
+    res.sendStatus(404);
+    return
+  }
+
+  let tobeUpdatedTodo = targetTodoList.pop();
+  let todoIndex = todoList.indexOf(tobeUpdatedTodo);
+  tobeUpdatedTodo = {id: tobeUpdatedTodo.id, title : inputTodo.title, completed : inputTodo.completed, description : inputTodo.description }
+  todoList[todoIndex] = tobeUpdatedTodo
+  res.json(tobeUpdatedTodo);
+});
+
+app.delete('/todos/:todoId', function(req, res) {
+  let targetTodoList = todoList.filter((elem) => elem.id == req.params.todoId)
+  if(targetTodoList.length == 0) {
+    res.sendStatus(404)    
+    return
+  }
+  let tobeDeletedTodo = targetTodoList.pop()
+  let todoIndex = todoList.indexOf(tobeDeletedTodo)
+  todoList.splice(todoIndex, 1)
+  res.sendStatus(200)
+});
+
+//app.listen(port, () => {console.log(`started listening on ${port}`)})
 
 module.exports = app;
